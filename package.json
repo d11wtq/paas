@@ -1,0 +1,30 @@
+{
+  "name": "paas",
+  "version": "0.0.0",
+  "description": "Self-hosted Infrastructure, managed by a hosted PaaS",
+  "main": "app.js",
+  "scripts": {
+    "test": "/bin/true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d11wtq/paas.git"
+  },
+  "keywords": [
+    "paas",
+    "aws",
+    "docker"
+  ],
+  "author": "Chris Corbyn",
+  "license": "Proprietary",
+  "bugs": {
+    "url": "https://github.com/d11wtq/paas/issues"
+  },
+  "homepage": "https://github.com/d11wtq/paas",
+  "dependencies": {
+    "aws-sdk": "^2.1.39",
+    "body-parser": "^1.13.2",
+    "express": "^4.13.1",
+    "yamljs": "^0.2.3"
+  }
+}
