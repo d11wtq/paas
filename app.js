@@ -4,10 +4,15 @@ var express = require('express')
   , deploy = require('./lib/aws/cloudformation/deploy')
   ;
 
-var app = express();
+var app = express()
+  , timeout = 7200000
+  ;
+
 app.use(bodyParser.text({type: 'text/yaml'}));
 
 app.post('/deploy/:name', function(req, res){
+  req.setTimeout(timeout);
+
   if (req.headers['content-type'] == 'text/yaml') {
     var deployment = deploy(
       req.params.name,
