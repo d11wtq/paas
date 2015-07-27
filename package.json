@@ -10,6 +10,7 @@
     "body-parser": "^1.13.2",
     "express": "^4.13.1",
     "lodash": "^3.10.0",
+    "toposort": "^0.2.10",
     "yamljs": "^0.2.3"
   }
 }
