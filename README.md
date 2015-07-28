@@ -64,8 +64,6 @@ A docker-based web application.
 ``` yaml
 description: Example stack
 
-version: 1
-
 vpc: vpc-330bae56
 
 subnets:
