@@ -1,6 +1,8 @@
 var express = require('express')
   , bodyParser = require('body-parser')
+  , util = require('util')
   , YAML = require('yamljs')
+  , config = require('./lib/config')
   , deploy = require('./lib/aws/cloudformation/deploy')
   , remove = require('./lib/aws/cloudformation/remove')
   ;
@@ -17,13 +19,25 @@ app.put('/deployments/:stack', function(req, res){
   req.setTimeout(7200000);
 
   if (req.headers['content-type'] == 'text/yaml') {
-    var deployment = deploy(req.params.stack, YAML.parse(req.body));
+    try {
+      var deployment = deploy(
+        req.params.stack,
+        config.sanitize(YAML.parse(req.body))
+      );
 
-    res.status(202).type('plain');
-    deployment.on('log', res.write.bind(res));
-    deployment.on('end', res.end.bind(res));
+      res.status(202).type('plain');
+
+      deployment.on('log', res.write.bind(res));
+      deployment.on('end', res.end.bind(res));
+    } catch (e) {
+      res.status(400)
+        .type('plain')
+        .send(util.format('%s\n', e.toString()));
+    }
   } else {
-    res.status(400).send('Unsupported content-type');
+    res.status(400)
+      .type('plain')
+      .send('Unsupported content-type.\n');
   }
 });
 
