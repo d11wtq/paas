@@ -30,6 +30,7 @@ app.put('/deployments/:stack', function(req, res){
       deployment.on('log', res.write.bind(res));
       deployment.on('end', res.end.bind(res));
     } catch (e) {
+      throw e;
       res.status(400)
         .type('plain')
         .send(util.format('%s\n', e.toString()));
