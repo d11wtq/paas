@@ -19,7 +19,7 @@ var AWS = require('aws-sdk')
 function latest(images) {
   return images
     .filter(function(img){
-      return !/\.rc-/.test(img.Name);
+      return /rancheros-/.test(img.Name);
     })
     .sort(function(a, b){
       return b.Name.localeCompare(a.Name);
@@ -50,11 +50,11 @@ function latest(images) {
             'Values': ['available']
           },
           {
-            'Name': 'name',
-            'Values': ['amzn-ami-hvm-*.x86_64-gp2']
+            'Name': 'architecture',
+            'Values': ['x86_64']
           },
         ],
-        Owners: ['amazon']
+        Owners: ['605812595337']
       },
       function(err, res){
         if (err) {
