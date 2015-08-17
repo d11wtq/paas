@@ -3,6 +3,7 @@
 var AWS = require('aws-sdk')
   , util = require('util')
   , _ = require('lodash')
+  , path = require('path')
   , regions = [
     'us-east-1',
     'us-west-1',
@@ -14,12 +15,31 @@ var AWS = require('aws-sdk')
     'eu-west-1',
     'eu-central-1'
   ]
+  , filters = {
+    docker: {
+      owner: '186644023806',
+      image: /^ubuntu-.*-docker-.*/
+    },
+    nat: {
+      owner: 'amazon',
+      image: /^amzn-ami-vpc-nat-.*-gp2/
+    },
+  },
+  filter = (filters[process.argv[2]] || usage(1))
   ;
+
+function usage(code) {
+  console.log(
+    'Usage: %s "docker" | "nat"',
+    path.basename(process.argv[1])
+  );
+  process.exit(code || 0);
+}
 
 function latest(images) {
   return images
     .filter(function(img){
-      return /rancheros-/.test(img.Name);
+      return filter.image.test(img.Name);
     })
     .sort(function(a, b){
       return b.Name.localeCompare(a.Name);
@@ -54,7 +74,7 @@ function latest(images) {
             'Values': ['x86_64']
           },
         ],
-        Owners: ['605812595337']
+        Owners: [filter.owner]
       },
       function(err, res){
         if (err) {
