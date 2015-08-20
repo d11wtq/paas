@@ -5,6 +5,7 @@ var express = require('express')
   , config = require('./lib/config')
   , deploy = require('./lib/aws/cloudformation/deploy')
   , remove = require('./lib/aws/cloudformation/remove')
+  , template = require('./lib/aws/cloudformation/template')
   ;
 
 var app = express();
@@ -13,15 +14,57 @@ var app = express();
 app.use(bodyParser.text({type: 'text/yaml'}));
 
 /**
- * Create or update :stack with the posted deploy.yml.
+ * Debug for PUT /stacks/:name.
  */
-app.put('/deployments/:stack', function(req, res){
+app.put('/debug/stacks/:name', function(req, res){
+  if (req.headers['content-type'] == 'text/yaml') {
+    try {
+      var implied = config.sanitize(YAML.parse(req.body));
+
+      res.status(202)
+        .type('plain')
+        .send(
+          util.format(
+            [
+              'Stack: %s',
+              '',
+              'Implied Config:',
+              '%s',
+              '',
+              'Template:',
+              '%s'
+            ].join('\n'),
+            req.params.name,
+            YAML.stringify(implied, null, 2),
+            JSON.stringify(
+              template.build(implied),
+              null,
+              2
+            )
+          )
+        );
+    } catch (e) {
+      res.status(400)
+        .type('plain')
+        .send(util.format('%s\n', e.toString()));
+    }
+  } else {
+    res.status(400)
+      .type('plain')
+      .send('Unsupported content-type.\n');
+  }
+});
+
+/**
+ * Create or update stack :name with the posted deploy.yml.
+ */
+app.put('/stacks/:name', function(req, res){
   req.setTimeout(7200000);
 
   if (req.headers['content-type'] == 'text/yaml') {
     try {
       var deployment = deploy(
-        req.params.stack,
+        req.params.name,
         config.sanitize(YAML.parse(req.body))
       );
 
@@ -42,12 +85,12 @@ app.put('/deployments/:stack', function(req, res){
 });
 
 /**
- * Delete :stack, if it exists.
+ * Delete stack :name if it exists.
  */
-app.delete('/deployments/:stack', function(req, res){
+app.delete('/stacks/:name', function(req, res){
   req.setTimeout(7200000);
 
-  var removal = remove(req.params.stack);
+  var removal = remove(req.params.name);
 
   res.status(202).type('plain');
   removal.on('log', res.write.bind(res));
@@ -61,7 +104,7 @@ var server = app.listen(3000, function(){
     ;
 
   console.log(
-    'PaaS listening on http://%s:%s',
+    'hird.io listening on http://%s:%s',
     host,
     port
   );
