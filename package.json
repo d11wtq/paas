@@ -12,7 +12,7 @@
     "express": "^4.13.1",
     "jsonschema": "^1.0.2",
     "lodash": "^3.10.0",
-    "netaddr": "^1.0.1",
+    "netaddr": "^1.1.0",
     "toposort": "^0.2.10",
     "yamljs": "^0.2.3"
   }
