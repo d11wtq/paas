@@ -18,36 +18,44 @@ app.use(bodyParser.text({type: 'text/yaml'}));
  */
 app.put('/debug/stacks/:name', function(req, res){
   if (req.headers['content-type'] == 'text/yaml') {
-    try {
-      var implied = config.sanitize(YAML.parse(req.body));
+    config.resolve(YAML.parse(req.body), function(err, data){
+      if (err) {
+        res.status(400)
+          .type('plain')
+          .send(util.format('%s\n', err.toString()));
+      } else {
+        try {
+          var implied = config.sanitize(data);
 
-      res.status(202)
-        .type('plain')
-        .send(
-          util.format(
-            [
-              'Stack: %s',
-              '',
-              'Implied Config:',
-              '%s',
-              '',
-              'Template:',
-              '%s'
-            ].join('\n'),
-            req.params.name,
-            YAML.stringify(implied, null, 2),
-            JSON.stringify(
-              template.build(implied),
-              null,
-              2
-            )
-          )
-        );
-    } catch (e) {
-      res.status(400)
-        .type('plain')
-        .send(util.format('%s\n', e.toString()));
-    }
+          res.status(202)
+            .type('plain')
+            .send(
+              util.format(
+                [
+                  'Stack: %s',
+                  '',
+                  'Implied Config:',
+                  '%s',
+                  '',
+                  'Template:',
+                  '%s'
+                ].join('\n'),
+                req.params.name,
+                YAML.stringify(implied, null, 2),
+                JSON.stringify(
+                  template.build(implied),
+                  null,
+                  2
+                )
+              )
+            );
+        } catch (e) {
+          res.status(400)
+            .type('plain')
+            .send(util.format('%s\n', e.toString()));
+        }
+      }
+    });
   } else {
     res.status(400)
       .type('plain')
@@ -62,21 +70,29 @@ app.put('/stacks/:name', function(req, res){
   req.setTimeout(7200000);
 
   if (req.headers['content-type'] == 'text/yaml') {
-    try {
-      var deployment = deploy(
-        req.params.name,
-        config.sanitize(YAML.parse(req.body))
-      );
+    config.resolve(YAML.parse(req.body), function(err, data){
+      if (err) {
+        res.status(400)
+          .type('plain')
+          .send(util.format('%s\n', err.toString()));
+      } else {
+        try {
+          var deployment = deploy(
+            req.params.name,
+            config.sanitize(data)
+          );
 
-      res.status(202).type('plain');
+          res.status(202).type('plain');
 
-      deployment.on('log', res.write.bind(res));
-      deployment.on('end', res.end.bind(res));
-    } catch (e) {
-      res.status(400)
-        .type('plain')
-        .send(util.format('%s\n', e.toString()));
-    }
+          deployment.on('log', res.write.bind(res));
+          deployment.on('end', res.end.bind(res));
+        } catch (e) {
+          res.status(400)
+            .type('plain')
+            .send(util.format('%s\n', e.toString()));
+        }
+      }
+    });
   } else {
     res.status(400)
       .type('plain')
