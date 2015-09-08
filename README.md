@@ -1,6 +1,6 @@
-# PaaS
+# Hird
 
-PaaS is a RESTful web service that deploys and manages your applications on AWS
+Hird is a RESTful web service that deploys and manages your applications on AWS
 following some of the best practices used by companies with years of DevOps
 experience. You keep your infrastructure within your own AWS account. You drive
 that infrastructure through code. We provide the means to do that.
@@ -16,47 +16,39 @@ that infrastructure through code. We provide the means to do that.
 
 ## Reference
 
-### PUT /deployments/:stack
+### PUT /api/v1/stacks/:name
 
 Requires content-type "text/yaml" and accepts a YAML file that describes the
-deployment. If `:stack` does not exist, it is created. Otherwise `:stack` is
+deployment. If `:name` does not exist, it is created. Otherwise `:name` is
 updated.
 
 Events are output in log format as they are received.
 
-### DELETE /deployments/:stack
+### DELETE /api/v1/stacks/:name
 
-If `:stack` exists, deletes it. Otherwise does nothing.
+If `:name` exists, deletes it. Otherwise does nothing.
 
 Events are output in log format as they are received.
+
+### POST /api/v1/inspect/template
+
+Receives input like `PUT /api/v1/stacks/:name`, but outputs the JSON template
+that would be applied with CloudFormation.
+
+### POST /api/v1/inspect/config
+
+Receives input like `PUT /api/v1/stacks/:name`, but outputs the YAML config
+with all default values filled in.
 
 ## Examples
 
 An entire VPC, with public and private subnets.
 
 ``` yaml
-description: PaaS VPC
+description: Hird VPC
 
 network:
-  nat:
-    ami: ami-43ee9e79
-    type: t2.micro
   cidr: 10.0.0.0/16
-  subnets:
-    public:
-      cidr:
-        - 10.0.0.0/24
-        - 10.0.1.0/24
-      public: true
-      routes:
-        0.0.0.0/0: internet
-    private:
-      cidr:
-        - 10.0.2.0/24
-        - 10.0.3.0/24
-      public: false
-      routes:
-        0.0.0.0/0: nat
 ```
 
 A docker-based web application.
@@ -64,25 +56,9 @@ A docker-based web application.
 ``` yaml
 description: Example stack
 
-vpc: vpc-330bae56
-
-subnets:
-  public:
-    - subnet-5f0baa28
-    - subnet-20982345
-  private:
-    - subnet-7d982318
-    - subnet-5e0baa29
-
-monitoring:
-  type: tcp
-  port: 80
-  timeout: 10
-  grace: 300
+depends: [vpc]
 
 instances:
-  ami: ami-9392faa9
-  type: t2.micro
   scale: 2
 
 containers:
@@ -91,4 +67,34 @@ containers:
     ports: {80: 8080}
 ```
 
-Eventually most of this will be optional.
+A hosted zone with some DNS records:
+
+``` yaml
+description: Hosted Zone for w3style.co.uk
+
+zone: w3style.co.uk
+
+domains:
+  w3style.co.uk:
+    MX:
+      ttl: 3600
+      records:
+        - "1  ASPMX.L.GOOGLE.COM"
+        - "5  ALT1.ASPMX.L.GOOGLE.COM"
+        - "5  ALT2.ASPMX.L.GOOGLE.COM"
+        - "10 ALT3.ASPMX.L.GOOGLE.COM"
+        - "10 ALT4.ASPMX.L.GOOGLE.COM"
+```
+
+A Postgres database master:
+
+``` yaml
+description: Example PostgreSQL RDS DB
+
+depends: [vpc]
+
+database:
+  engine: postgres/9.4.1
+  username: postgres
+  password: sergtsop
+```
