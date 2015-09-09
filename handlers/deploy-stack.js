@@ -1,39 +1,23 @@
 var util = require('util')
-  , YAML = require('yamljs')
   , config = require('../lib/config')
+  , aws = require('../lib/aws/service')
   , command = require('../lib/aws/cloudformation/deploy')
   ;
 
-module.exports = function(req, res){
-  req.setTimeout(7200000);
+module.exports = function(req, res) {
+  req.setTimeout(2 * 60 * 60 * 1000); // 2 hours
 
-  if (req.headers['content-type'] == 'text/yaml') {
-    config.resolve(YAML.parse(req.body), function(err, data){
-      if (err) {
-        res.status(400)
-          .type('plain')
-          .send(util.format('%s\n', err.toString()));
-      } else {
-        try {
-          var deployment = command(
-            req.params.name,
-            config.sanitize(data)
-          );
+  config.fetch(req, function(err, data){
+    if (err) {
+      res.status(400)
+        .type('plain')
+        .send(util.format('%s\n', err.toString()));
+    } else {
+      res.status(202).type('plain');
 
-          res.status(202).type('plain');
-
-          deployment.on('log', res.write.bind(res));
-          deployment.on('end', res.end.bind(res));
-        } catch (e) {
-          res.status(400)
-            .type('plain')
-            .send(util.format('%s\n', e.toString()));
-        }
-      }
-    });
-  } else {
-    res.status(400)
-      .type('plain')
-      .send('Unsupported content-type.\n');
-  }
+      command(aws.factory(req), req.params.name, data)
+        .on('log', res.write.bind(res))
+        .on('end', res.end.bind(res));
+    }
+  });
 };
