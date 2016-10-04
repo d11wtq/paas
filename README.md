@@ -1,5 +1,8 @@
 # Hird
 
+This project was originally private but is not currently being maintained. It
+has been open sourced in the interest of sharing knowledge.
+
 Hird is a RESTful web service that deploys and manages your applications on AWS
 following some of the best practices used by companies with years of DevOps
 experience. You keep your infrastructure within your own AWS account. You drive
